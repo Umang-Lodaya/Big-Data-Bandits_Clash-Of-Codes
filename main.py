@@ -24,7 +24,7 @@ def main():
     vert_space = "<body style='bgcolor: \"pink\";'></body>"
     st.markdown(vert_space, unsafe_allow_html=True)
     # st.sidebar.title("Navigation Bar")
-    user_menu=st.sidebar.radio('Select an Option', ('Home','Suggestions','Overall Analysis'))
+    user_menu=st.sidebar.radio('Select an Option', ('Home','Suggestions','Exploratory Data Analysis'))
 
     if(user_menu=='Home'):
         st.title("PROFILE SCORING!")
@@ -32,13 +32,13 @@ def main():
         data = st.text_area("Data (json):", {})
         st.json(json.loads(data))
     
-    elif(user_menu=='Overall Analysis'):
+    elif(user_menu=='Exploratory Data Analysis'):
         st.header('Overall Analysis')
         col1, col2 = st.columns(2)
-        col1.subheader("Verifed Users")
+        col1.subheader("Verified Users")
         col1.plotly_chart(px.pie(users, values='_id', names='is_verified'), use_container_width=True)
         
-        col2.subheader("Subcribed Users")
+        col2.subheader("Subscribed Users")
         col2.plotly_chart(px.pie(users, values='_id', names='is_subscribed'), use_container_width=True)
         
         col1, col2 = st.columns(2)
@@ -60,7 +60,7 @@ def main():
         col2.plotly_chart(px.line(users, x="_id", y="age"), use_container_width=True)
 
     else:
-        st.header('Suggestions')
+        st.header('Recommendations')
         # years,country=helper.country_year_list(users)
         
         # selected_year=st.sidebar.selectbox("Select Year",years)
