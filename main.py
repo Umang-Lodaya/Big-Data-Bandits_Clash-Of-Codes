@@ -25,7 +25,11 @@ def welcome():
 #     return prediction
 from streamlit_card import card
 
-URI = "https://c3b4-2409-40c0-28-699f-41d3-899a-fa53-6435.in.ngrok.io/"
+URI = f"https://b457-2409-4040-e84-2f0f-1849-73af-d3ab-4955.in.ngrok.io/recommend"
+def fetch(session, url):
+    result = session.post(url)
+    return result
+
 
 def main():
     st.sidebar.image("https://www.getidyll.in/assets/logo-1.svg")
@@ -39,13 +43,20 @@ def main():
         st.header("FIND YOUR PERFECT MATCH!")
         st.markdown('Provide the follwing data')
         data = st.text_area("Data (json):", {})
-        st.json(json.loads(data))
+        data = json.loads(data)
+        st.json(data)
+        # session = requests.Session()
 
         if st.button('Get Prediction'):
-            user_menu = "Recommendations"
-            response = requests.post(URI, data={})
-            response = json.loads(response.text)
-            st.markdown(response)
+            # user_menu = "Recommendations"
+            response = requests.post(URI, data)
+            st.markdown("OUTPUT:")
+            # if response:
+            print(response.json())
+            st.json(json.loads(response.json()))
+            # response = json.loads(response) 
+            # else:
+                # st.json({})
 
     elif(user_menu=='Exploratory Data Analysis'):
         st.header('Overall Analysis')
@@ -88,7 +99,7 @@ According to us, no insta id should be used because it might reduce the user's t
         
         st.write("During our testing, we discovered a problem in which a female account received more likes than a free account and was also able to see who liked, despite the fact that they are intended to be pro features.")
     
-        st.write('## Future Scope')
+        st.write('## Future Scope:')
         st.write("""We can apply multiple policies/algo for scoring and recommendations system and we can randomly use any policy and then record the feedback for it and using reinforcement learning do exploration and exploitation to select best policy""")
     else:
         st.header('Recommendations')
