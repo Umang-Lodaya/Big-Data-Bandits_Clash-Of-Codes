@@ -1,3 +1,4 @@
+import re
 import json
 import pickle
 import numpy as np
@@ -7,57 +8,97 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
 # st_card('Completed Orders', value=76.4, show_progress=True)
+
+
+# {"_id":499,"bio":"Explore after chit-chat","college":"Xavier","country":"IN", "createdAt":"2023-02-09T06:44:27.385Z","dob":"2000-02-27","email":"9499000000@get.idyll", "face_detection_probabilities":null,"gender":"M","height":5.3,"interests":[""],"is_habit_drink":"S", "is_habit_smoke":"S","is_verified":false,"mobile":9499000000,"name":"Aryan ","status":true,"type":"U", "updatedAt":"2023-02-09T06:50:46.115Z","verified_at":null,"what_to_find":"C","who_to_date":"F","is_subscribed":false, "clg":"JNU","age":23.0}
+
 
 import requests
 from urllib import response
+from streamlit_card import card
 
 users = pd.read_csv('./Users.csv')
-
-# pkl = open("", "rb")
-# model = pkl.load(pkl)
+URI = f"https://perry7569.pythonanywhere.com/recommend"
+to_find = {"NS": "Not Sure", "R":"Relationship", "C":"Casual", "F":"Friendship", "C":"Connection"}
 
 def welcome():
     return "Welcome!"
 
-# def predict():
-#     prediction = model.predict([])
-#     return prediction
-from streamlit_card import card
-
-URI = f"https://b457-2409-4040-e84-2f0f-1849-73af-d3ab-4955.in.ngrok.io/recommend"
-def fetch(session, url):
-    result = session.post(url)
-    return result
-
-
 def main():
+    res = None
+    no_data = True
+    count = 5
+    st.set_page_config(layout="wide")
+    print("\n\n===================================================")
     st.sidebar.image("https://www.getidyll.in/assets/logo-1.svg")
     # st.sidebar.title("IDLLY!")
     vert_space = "<body style='bgcolor: \"pink\";'></body>"
     st.markdown(vert_space, unsafe_allow_html=True)
     # st.sidebar.title("Navigation Bar")
-    user_menu=st.sidebar.radio('Select an Option', ('Home','Recommendations','Exploratory Data Analysis', 'Suggestions & Future Scope'))
+    menu = ['Home','Recommendations','Exploratory Data Analysis', 'Suggestions & Future Scope']
+    user_menu=st.sidebar.radio('Select an Option', menu)
 
     if(user_menu=='Home'):
-        st.header("FIND YOUR PERFECT MATCH!")
-        st.markdown('Provide the follwing data')
-        data = st.text_area("Data (json):", {})
-        data = json.loads(data)
-        st.json(data)
-        # session = requests.Session()
+        col1, col2 = st.columns(2, gap="large")
+        # res = None
+        with col1:
+            st.header("FIND YOUR PERFECT MATCH!")
+            st.markdown('Provide the follwing data')
+            data = st.text_area("Data (json):", height=240)
+            if data != "":
+                no_data = False
+            
+            count = st.slider('Number of Matches', 1, 10, step=1, value=5)
+            if st.button('Get Prediction'):
+                if not no_data:
+                    no_data = False
+                    data = json.loads(data)
+                    # print(data)
+                    # print(type(data))
+                    # st.json(data)
+                    res = requests.post(URI, json=data, headers={"Content-Type": "application/json"})
+                    res = json.loads(res.text)
+            if no_data:
+                st.write("PLEASE ENTER DATA!")
+            # if res: print("RESPONDED!")
+            # print(res.ok, res.status_code)
+            # print(res)
+            # st.json(res["0"])
 
-        if st.button('Get Prediction'):
-            # user_menu = "Recommendations"
-            response = requests.post(URI, data)
-            st.markdown("OUTPUT:")
-            # if response:
-            print(response.json())
-            st.json(json.loads(response.json()))
-            # response = json.loads(response) 
-            # else:
-                # st.json({})
-
+        with col2:
+            if res:
+                if count == 1:
+                    st.header("Best Match:")
+                    _id = list(res["0"]["_id"].keys())[0]
+                    with st.expander(res["0"]["name"][_id], True):
+                        st.write("Bio: " + res["0"]["bio"][_id])
+                        temp = re.sub("[\[\]^\"]", "" ,res["0"]["college"][_id][2:-2])
+                        st.write("College: " + temp)
+                        st.write("Date of Birth: " + res["0"]["dob"][_id][:10])
+                        temp = re.sub("[\[\]^\"]", "" , res["0"]["interests"][_id])
+                        st.write("Interests: " + ', '.join(temp.split(",")))
+                        st.write("Type: " + res["0"]["type"][_id])
+                        st.write("Finding: " + to_find[res["0"]["what_to_find"][_id]])
+                else:
+                    st.header("Best Matches:")
+                    for i in range(count): 
+                        
+                        _id = list(res[str(i)]["_id"].keys())[0]
+                        # col1.subheader("User " + str(i+1))
+                        print(_id, type(_id))
+                        with st.expander(res[str(i)]["name"][_id]):
+                            st.write("Bio: " + res[str(i)]["bio"][_id])
+                            temp = re.sub("[\[\]^\"]", "" ,res[str(i)]["college"][_id][2:-2])
+                            st.write("College: " + temp)
+                            st.write("Date of Birth: " + res[str(i)]["dob"][_id][:10])
+                            temp = re.sub("[\[\]^\"]", "" , res[str(i)]["interests"][_id])
+                            st.write("Interests: " + ', '.join(temp.split(",")))
+                            st.write("Type: " + res[str(i)]["type"][_id])
+                            st.write("Finding: " + to_find[res[str(i)]["what_to_find"][_id]])
+                        # st.write("Is Verified: " + str(res[str(i)]["is_verified"][_id]))
+ 
     elif(user_menu=='Exploratory Data Analysis'):
         st.header('Overall Analysis')
         col1, col2 = st.columns(2)
@@ -101,9 +142,10 @@ According to us, no insta id should be used because it might reduce the user's t
     
         st.write('## Future Scope:')
         st.write("""We can apply multiple policies/algo for scoring and recommendations system and we can randomly use any policy and then record the feedback for it and using reinforcement learning do exploration and exploitation to select best policy""")
+    
+    
     else:
         st.header('Recommendations')
-
 
         col1, col2, col3, col4, col5 = st.columns(5)
         
